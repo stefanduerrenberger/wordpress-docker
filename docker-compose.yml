@@ -1,0 +1,74 @@
+version: '3.7'
+services:
+  wordpress:
+    image: wordpress
+    labels:
+      - "com.example.description=WordPress test environment"
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpressuser
+      WORDPRESS_DB_PASSWORD: 58BNnYZuC2v&S5
+      WORDPRESS_DB_NAME: wordpressdb
+      WORDPRESS_CONFIG_EXTRA: |
+        # Require SSL for admin and logins
+        define( 'FORCE_SSL_ADMIN', false );
+        # Disable plugin and theme update and installation
+        define( 'DISALLOW_FILE_MODS', false );
+        # Disable the plugin and theme editor
+        define( 'DISALLOW_FILE_EDIT', false );
+    volumes:
+      - ./wp:/var/www/html
+      - type: bind
+        source: ./docker-php.ini
+        target: /usr/local/etc/php/conf.d/docker-php.ini
+      - type: bind
+        source: ./docker-apache.conf
+        target: /etc/apache2/conf-enabled/docker-apache.conf
+  db:
+    image: mysql:latest
+    labels:
+      - "com.example.description=WordPress database"
+    restart: always
+    environment:
+      MYSQL_DATABASE: wordpressdb
+      MYSQL_USER: wordpressuser
+      MYSQL_PASSWORD: 58BNnYZuC2v&S5
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - type: volume
+        source: db
+        target: /var/lib/mysql
+  adminer:
+    image: adminer
+    restart: always
+    container_name: adminer
+    ports:
+      - target: 8080
+        published: 8081
+        protocol: tcp
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    container_name: phpmyadmin
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    ports:
+      - target: 80
+        published: 8082
+        protocol: tcp
+
+volumes:
+  wordpress:
+    labels:
+      - "com.example.description=WordPress install"
+  db:
+    labels:
+      - "com.example.description=MySQL datastore"
+      -
